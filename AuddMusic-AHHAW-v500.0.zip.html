@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AuddMusic - AHHAW 500.0</title>
+<style>
+:root{color-scheme:dark;--g:rgba(255,255,255,.08);--b:rgba(255,255,255,.2);--t:#f2f4ff;--m:#b9c0e6;--ok:#5ef2b0;--er:#ff7a8a;--ac:#8fa6ff}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,sans-serif;color:var(--t);min-height:100vh;background:#0b0f2a;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;width:60vmax;height:60vmax;border-radius:50%;filter:blur(90px);opacity:.5;z-index:-1;will-change:transform;animation:fl 18s ease-in-out infinite alternate}
+body::before{background:#5b4bff;top:-20vmax;left:-15vmax}
+body::after{background:#00c2d1;bottom:-25vmax;right:-15vmax;animation-delay:-9s}
+@keyframes fl{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+main{max-width:860px;margin:0 auto;padding:16px}
+.glass{background:var(--g);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--b);border-radius:22px;padding:16px;margin:14px 0;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:1.4rem;margin:0}h2{font-size:1rem;margin:0;white-space:nowrap}
+.ver{padding:2px 10px;border:1px solid var(--b);border-radius:99px;color:var(--m)}
+button,select,.btn{font:inherit;color:var(--t);background:rgba(143,166,255,.22);border:1px solid var(--b);border-radius:14px;padding:10px 16px;min-height:44px;cursor:pointer;transition:transform .2s,background .2s}
+button:hover:not(:disabled){background:rgba(143,166,255,.4);transform:translateY(-1px)}
+button:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+select option{color:#111}
+#up{display:block;text-align:center;padding:26px 12px;border:2px dashed var(--b);border-radius:18px;cursor:pointer}
+#up.over{background:rgba(143,166,255,.2)}
+#up input{position:absolute;opacity:0;width:1px;height:1px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.err{color:var(--er)}.mut{color:var(--m);font-size:.9rem}
+.sh{display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:12px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;will-change:transform;background:linear-gradient(90deg,#8fa6ff,#5ef2b0);border-radius:9px;transition:transform .2s}
+.bar.ind i{width:35%;transform:translateX(0);animation:ind 1.2s ease-in-out infinite alternate}
+@keyframes ind{to{transform:translateX(185%)}}.glass{contain:layout paint}body.lo .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(30,35,80,.85)}body.lo::before,body.lo::after{display:none}body.busy .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(30,35,80,.88)}body.busy::before,body.busy::after{animation:none}
+.pct{min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+.badge{font-size:.75rem;padding:1px 8px;border-radius:99px;border:1px solid var(--b);text-transform:uppercase}
+[data-state=completed] .badge{color:var(--ok)}[data-state=failed] .badge,[data-state=unavailable] .badge{color:var(--er)}
+.msg{margin:8px 0 0;min-height:1.3em}
+[data-state=completed] .msg{color:var(--ok)}[data-state=failed] .msg,[data-state=unavailable] .msg{color:var(--er)}
+.sc{display:none}.sc.on{display:block}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+td:first-child{color:var(--m);width:34%}
+.tag{font-size:.7rem;padding:0 6px;border:1px solid var(--b);border-radius:6px;margin-left:6px;color:var(--m)}
+canvas{width:100%;height:70px;display:block;margin-top:8px;border-radius:10px;background:rgba(0,0,0,.2)}
+textarea{width:100%;min-height:150px;margin-top:8px;color:var(--t);background:rgba(0,0,0,.25);border:1px solid var(--b);border-radius:12px;padding:10px;font:14px/1.4 ui-monospace,monospace}
+audio{width:100%;margin-top:4px}
+a.btn{display:inline-block;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
+@media (max-width:520px){.sh{flex-wrap:wrap}.bar{order:3;flex-basis:100%}}
+</style></head><body><main>
+<header class="glass"><h1>AuddMusic - AHHAW</h1><span class="ver">500.0</span><label class="mut"><input type="checkbox" id="hg" checked> High graphics</label><span class="mut" id="fps" title="Rendering uses GPU-friendly transforms and targets your screen's full refresh rate (up to 120 FPS if the display supports it). The meter shows the real measured rate.">FPS: …</span></header>
+
+<section class="glass" aria-labelledby="uh">
+<h2 id="uh">Audio file (.wav or .mp3 only)</h2>
+<label id="up" tabindex="0">Tap to choose a WAV or MP3, or drop it here
+<input id="file" type="file" accept=".wav,.mp3,audio/wav,audio/x-wav,audio/mpeg,audio/mp3" aria-label="Choose WAV or MP3 file"></label>
+<p id="uerr" class="err" role="alert"></p>
+<p id="finfo" class="mut"></p>
+<div class="row"><button id="rep" disabled>Replace File</button><button id="rem" disabled>Remove File</button><button id="dec" disabled style="font-weight:700">Decode</button></div>
+<p class="mut">Privacy: everything runs on your device and no audio is uploaded. The only network use is downloading the Whisper Base model files from Hugging Face (and its code from jsDelivr) on first transcription; the model is cached by your browser. No OpenAI API, accounts, keys or paid services are used.</p>
+</section>
+<div id="stages"></div>
+<section class="glass" id="errtor" aria-labelledby="eth"><h2 id="eth">ErrTor (error detector)</h2><p class="mut">Watches every stage, detects stalls and errors, applies safe automatic fixes, and keeps finished results.</p><ul id="elog" class="mut"><li>No errors detected.</li></ul><label for="epaste"><b>Paste ErrTor report(s) here</b></label><textarea id="epaste" aria-label="Paste copied ErrTor report" placeholder="[20:27:47] Stage 3: ..." spellcheck="false" style="min-height:90px"></textarea><div class="row"><button id="efix">Run ErrTor Fix</button><button id="ecp">Copy report</button></div><ul id="eres" class="mut" role="status"></ul></section>
+<div id="live" class="mut" aria-live="polite" style="position:absolute;left:-9999px"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s),TITLES=['','1. Read the audio','2. Decode','3. Transcribe','4. Separate','5. Download'];
+const S={},stg=[],T=[];let busy=false,ctxA=null;
+const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+(s%60).toFixed(1).padStart(4,'0'):'n/a';
+const tick=()=>new Promise(r=>setTimeout(r,0));
+// ---- stage UI
+const extra={
+1:'<div class="meta"></div><div class="tl"></div>',
+2:'<canvas aria-label="Waveform overview" role="img"></canvas>',
+3:'<p class="mut mode">Execution: Local (in your browser) with Whisper Base (openai/whisper-base, ONNX build Xenova/whisper-base). Whisper does speech recognition only: not stem separation and not note/MIDI detection.</p><textarea class="tx" hidden aria-label="Editable transcript, one segment per line: start | end | text" spellcheck="false"></textarea><p class="mut info" hidden>Segment-level timestamps in seconds, one per line: start | end | text. Edit freely.</p><div class="row"><button class="man" hidden>Enter transcript manually (not Whisper)</button><button class="use" hidden>Use this transcript</button><button class="skip" hidden>Skip transcription and continue to 4. Separate</button></div>',
+4:'<p class="mut">Engine: local stereo mid/side DSP (centre vs. side channels). This is a genuine signal process but NOT neural stem separation: it cannot cleanly isolate vocals from instruments and needs a stereo file. Memory use is about 2x the decoded audio size.</p><div class="stems"></div>',
+5:'<div class="row"><label for="ext">Output extension</label><select id="ext" aria-label="Output extension"><option value="kar" selected>.kar</option><option value="mid">.mid</option><option value="midi">.midi</option></select><button id="dl" disabled>Download .kar</button></div><p class="mut dinfo"></p>'};
+const ELOG=[];
+function ET(n,msg,fix){const t=new Date().toLocaleTimeString(),last=ELOG[ELOG.length-1];if(last&&last.msg==msg&&last.n==n)return;ELOG.push({t,n,msg,fix});
+const u=$('#elog');if(ELOG.length==1)u.textContent='';const li=document.createElement('li');li.textContent=`[${t}] ${n?'Stage '+n:'App'}: ${msg}${fix?' → Fix: '+fix:''}`;u.append(li)}
+addEventListener('error',e=>ET(0,'Unexpected error: '+e.message,'check stage status and use Retry'));
+addEventListener('unhandledrejection',e=>ET(0,'Unhandled promise error: '+(e.reason&&e.reason.message||e.reason)));
+$('#ecp').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(ELOG.map(x=>`[${x.t}] stage ${x.n}: ${x.msg} ${x.fix||''}`).join('\n')||'No errors');
+for(let n=1;n<=5;n++){const c=document.createElement('section');c.className='glass';c.dataset.state='pending';
+c.innerHTML=`<div class="sh"><h2>${TITLES[n]}</h2><div class="bar" role="progressbar" aria-label="${TITLES[n]} progress" aria-valuemin="0" aria-valuemax="100"><i></i></div><span class="pct">0%</span><span class="badge">pending</span></div><div class="mut el"></div><p class="msg" role="status"></p><div class="row"><button class="retry" hidden>Retry</button></div>${extra[n]}`;
+$('#stages').append(c);stg[n]=c;c.querySelector('.retry').onclick=()=>run(n)}
+function st0(n,state,o={}){const c=stg[n],bar=c.querySelector('.bar'),f=bar.firstChild,p=c.querySelector('.pct');
+const ind=state=='running'&&o.pct==null;bar.classList.toggle('ind',ind);
+if(o.pct!=null){f.style.transform='scaleX('+o.pct/100+')';p.textContent=Math.round(o.pct)+'%';bar.setAttribute('aria-valuenow',Math.round(o.pct))}
+else if(ind){f.style.transform='';p.textContent='n/a';bar.removeAttribute('aria-valuenow')}
+else if(state=='pending'){f.style.transform='scaleX(0)';p.textContent='0%'}
+if(o.text!=null){c.querySelector('.msg').textContent=o.text;$('#live').textContent=TITLES[n]+': '+o.text}
+if((state=='failed'||state=='unavailable')&&o.text)ET(n,o.text);c.querySelector('.badge').textContent=state;c.querySelector('.retry').hidden=state!='failed';
+if(state=='running'&&c.dataset.state!='running')T[n]=performance.now();c.dataset.state=state}
+const Q={};let qf=0;function fl(){qf=0;for(const n in Q){const[a,b]=Q[n];delete Q[n];st0(+n,a,b)}}
+function shield(on){S.shield=!!on;document.body.classList.toggle('busy',!!on);if(!on)S.slow=false}
+function st(n,a,b={}){Q[n]=[a,b];if(!qf){qf=1;if(S.slow)setTimeout(fl,500);else if(S.shield)setTimeout(fl,250);else{requestAnimationFrame(fl);setTimeout(fl,120)}}}
+setInterval(()=>{for(let n=1;n<=5;n++)if(stg[n].dataset.state=='running')stg[n].querySelector('.el').textContent='Elapsed: '+((performance.now()-T[n])/1000).toFixed(1)+' s'},300);
+function resetFrom(n){for(let i=n;i<=5;i++){st(i,'pending',{text:'',pct:0});stg[i].querySelector('.el').textContent=''}
+if(n<=1){stg[1].querySelector('.meta').textContent='';stg[1].querySelector('.tl').textContent=''}
+if(n<=3){const t=stg[3].querySelector('.tx');t.hidden=true;t.value='';for(const k of['.info','.man','.use','.skip'])stg[3].querySelector(k).hidden=true;S.segs=null;S.whisper=false}
+if(n<=4){stg[4].querySelector('.stems').textContent='';S.stems=null}
+$('#ext').value='kar';$('#dl').disabled=true;$('#dl').textContent='Download .kar';stg[5].querySelector('.dinfo').textContent=''}
+// ---- file handling
+function showErr(m){$('#uerr').textContent=m}
+function head(buf){return new Uint8Array(buf)}
+async function checkFile(f){
+if(!/\.(wav|mp3)$/i.test(f.name))throw Error('Unsupported file type. Only .wav and .mp3 are accepted (not video, .m4a, .flac, .ogg, .aac, .opus, .mid or .kar).');
+if(f.size==0)throw Error('The file is empty (0 bytes).');
+let b;try{b=head(await f.slice(0,4096).arrayBuffer())}catch(e){throw Error('The file cannot be read (permission or storage problem). Re-select it.')}
+const s=(o,l)=>String.fromCharCode(...b.slice(o,o+l));
+const wav=s(0,4)=='RIFF'&&s(8,4)=='WAVE',mp3=s(0,3)=='ID3'||(b[0]==255&&(b[1]&224)==224);
+if(/\.wav$/i.test(f.name)&&!wav)throw Error('This file is named .wav but its content is not a valid WAV (RIFF/WAVE header missing). It may be corrupt or a different format.');
+if(/\.mp3$/i.test(f.name)&&!mp3)throw Error('This file is named .mp3 but its content is not MPEG audio (no ID3 tag or frame sync). It may be corrupt or a different format.')}
+async function setFile(f){showErr('');try{await checkFile(f)}catch(e){showErr(e.message);return}
+S.file=f;S.buf=null;resetFrom(1);$('#finfo').textContent=`${f.name} · ${(f.size/1048576).toFixed(2)} MB`;$('#dec').disabled=false;$('#rep').disabled=$('#rem').disabled=false}
+$('#file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)setFile(f)};
+$('#rep').onclick=()=>$('#file').click();
+$('#rem').onclick=()=>{S.file=null;S.buf=null;resetFrom(1);$('#finfo').textContent='';showErr('');$('#dec').disabled=$('#rep').disabled=$('#rem').disabled=true};
+$('#up').onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();$('#file').click()}};
+const up=$('#up');up.ondragover=e=>{e.preventDefault();up.classList.add('over')};up.ondragleave=()=>up.classList.remove('over');
+up.ondrop=e=>{e.preventDefault();up.classList.remove('over');const f=e.dataTransfer.files[0];if(f)setFile(f)};
+// ---- stage 1
+function parseWav(b){const dv=new DataView(b.buffer,b.byteOffset,b.byteLength);let o=12,fm=null,data=0;
+while(o+8<=b.length){const id=String.fromCharCode(...b.slice(o,o+4)),sz=dv.getUint32(o+4,true);
+if(id=='fmt '){fm={tag:dv.getUint16(o+8,true),ch:dv.getUint16(o+10,true),sr:dv.getUint32(o+12,true),br:dv.getUint32(o+16,true),bits:dv.getUint16(o+22,true)}}
+if(id=='data'){data=Math.min(sz,b.length-o-8);break}o+=8+sz+(sz&1)}
+if(!fm||!data||!fm.br)throw Error('WAV has no valid fmt/data chunk (corrupt or truncated).');
+return{kind:'wav',...fm,dur:data/fm.br,codec:fm.tag==1?'PCM (uncompressed)':fm.tag==3?'IEEE float PCM':'WAV format tag '+fm.tag}}
+function parseMp3(b){let i=0;if(String.fromCharCode(...b.slice(0,3))=='ID3')i=10+((b[6]&127)<<21|(b[7]&127)<<14|(b[8]&127)<<7|(b[9]&127));
+for(;i<b.length-4;i++)if(b[i]==255&&(b[i+1]&224)==224){const v=(b[i+1]>>3)&3,l=(b[i+1]>>1)&3,bi=b[i+2]>>4,si=(b[i+2]>>2)&3;
+if(v==1||l!=1||bi==0||bi==15||si==3)continue;
+const t1=[0,32,40,48,56,64,80,96,112,128,160,192,224,256,320],t2=[0,8,16,24,32,40,48,56,64,80,96,112,128,144,160];
+const sr=({3:[44100,48000,32000],2:[22050,24000,16000],0:[11025,12000,8000]})[v][si];
+const w=String.fromCharCode(...b.slice(i+4,i+4+60));
+return{kind:'mp3',codec:`MPEG-${v==3?1:v==2?2:2.5} Layer III`,sr,ch:(b[i+3]>>6)==3?1:2,kbps:(v==3?t1:t2)[bi],vbr:/Xing/.test(w)}}
+throw Error('No valid MP3 frame header found; the file may be corrupt.')}
+async function stage1(){st(1,'running',{pct:0,text:'Reading file…'});const f=S.file;
+const ab=await new Promise((res,rej)=>{const r=new FileReader();r.onprogress=e=>e.lengthComputable&&st(1,'running',{pct:e.loaded/e.total*100,text:`Reading ${(e.loaded/1048576).toFixed(1)} / ${(e.total/1048576).toFixed(1)} MB`});
+r.onload=()=>res(r.result);r.onerror=()=>rej(Error('File read failed: '+(r.error&&r.error.message||'unknown')+'. Check storage/permission and retry.'));r.readAsArrayBuffer(f)});
+if(ab.byteLength!=f.size)throw Error('Read size does not match file size.');
+S.ab=ab;const b=new Uint8Array(ab),m=/\.wav$/i.test(f.name)?parseWav(b):parseMp3(b);
+let dur=m.dur;
+if(!(dur>0)){dur=await new Promise((res,rej)=>{const a=new Audio();a.preload='metadata';a.onloadedmetadata=()=>res(a.duration);a.onerror=()=>rej(Error('The browser cannot read this audio (corrupt or unsupported encoding).'));a.src=URL.createObjectURL(f)})}
+if(!isFinite(dur)||dur<=0)throw Error('Could not determine a valid duration.');
+S.meta={...m,dur};const avg=f.size*8/dur/1000,rows=[['File',f.name,'measured'],['File size',f.size.toLocaleString()+' bytes','measured'],['Codec',m.codec,'measured'],
+['Duration',fmt(dur)+` (${dur.toFixed(2)} s)`,m.kind=='wav'?'measured':'browser-reported'],['Sample rate',m.sr+' Hz','measured'],['Channels',m.ch+(m.ch==1?' (mono)':' (stereo)'),'measured'],
+['Bit depth',m.kind=='wav'?m.bits+'-bit':'Not applicable (lossy MP3)',m.kind=='wav'?'measured':'unavailable'],
+['Bitrate',m.kind=='wav'?(m.br*8/1000).toFixed(0)+' kbps':m.kbps+' kbps (first frame header)'+(m.vbr?', VBR; average ≈ '+avg.toFixed(0)+' kbps':''),m.kind=='wav'?'measured':'measured'],
+['Average bitrate',avg.toFixed(0)+' kbps (file size ÷ duration)','estimated'],
+['Quality',m.kind=='wav'?'Lossless PCM; no quality score is computed':'Lossy MPEG; no quality score is computed','unavailable']];
+const tb=document.createElement('table');for(const[k,v,t]of rows){const tr=tb.insertRow();tr.insertCell().textContent=k;const c=tr.insertCell();c.textContent=v;const g=document.createElement('span');g.className='tag';g.textContent=t;c.append(g)}
+const mt=stg[1].querySelector('.meta');mt.textContent='';mt.append(tb);stg[1].querySelector('.tl').textContent=`Timeline: 0:00.0 ──────── ${fmt(dur)}`;
+st(1,'completed',{pct:100,text:'Audio read successfully.'});return true}
+// ---- stage 2
+function wave(buf){const cv=stg[2].querySelector('canvas'),w=cv.width=cv.clientWidth*devicePixelRatio||600,h=cv.height=70*devicePixelRatio,g=cv.getContext('2d'),d=buf.getChannelData(0),k=Math.max(1,Math.floor(d.length/w));
+g.fillStyle='#8fa6ff';for(let x=0;x<w;x++){let mn=1,mx=-1;for(let j=x*k;j<(x+1)*k&&j<d.length;j++){const v=d[j];if(v<mn)mn=v;if(v>mx)mx=v}g.fillRect(x,(1-mx)*h/2,1,Math.max(1,(mx-mn)*h/2))}}
+async function stage2(){st(2,'running',{text:'Decoding with the browser audio decoder (it reports no measurable progress)…'});
+const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw Error('Web Audio is not available in this browser.');
+const c=new AC();let buf;try{buf=await c.decodeAudioData(S.ab.slice(0))}catch(e){throw Error('Decoder rejected the file: '+(e.message||'corrupt or unsupported data')+'. The original file is unchanged.')}finally{c.close()}
+if(!buf.length||!buf.numberOfChannels||!buf.sampleRate)throw Error('Decoded buffer is empty.');
+let nz=false;const d=buf.getChannelData(0);for(let i=0;i<d.length;i+=Math.max(1,d.length>>16))if(d[i]!==0){nz=true;break}
+if(!nz)for(let i=0;i<d.length;i++)if(d[i]!==0){nz=true;break}
+if(!nz)throw Error('Decoded audio is entirely silent/empty.');
+if(Math.abs(buf.duration-S.meta.dur)>Math.max(1,S.meta.dur*.05)){if(S.meta.kind=='wav')throw Error('Decoded duration does not match the WAV header.');ET(2,'MP3 duration estimate differed from decoded length','using the decoded duration ('+buf.duration.toFixed(2)+' s)');S.meta.dur=buf.duration}
+S.buf=buf;wave(buf);st(2,'completed',{pct:100,text:'Decoded the audio is completely finished'});return true}
+// ---- stage 3
+const tx=()=>stg[3].querySelector('.tx');
+function showTx(segs,manual){const t=tx();t.hidden=false;stg[3].querySelector('.info').hidden=false;t.value=segs.map(s=>`${s.s.toFixed(2)} | ${s.e.toFixed(2)} | ${s.t}`).join('\n');
+if(manual)stg[3].querySelector('.use').hidden=false}
+function parseTx(){const out=[];const L=tx().value.split('\n');let last=0;
+L.forEach((ln,i)=>{if(!ln.trim())return;const p=ln.split('|');if(p.length<3)throw Error(`Transcript line ${i+1}: use "start | end | text".`);
+const s=parseFloat(p[0]),e=parseFloat(p[1]),t=p.slice(2).join('|').trim();
+if(!(s>=0)||!(e>s)||s<last-1e-6||!t)throw Error(`Transcript line ${i+1}: needs numeric start ≥ 0, end > start, in order, with text.`);last=s;out.push({s,e,t})});
+if(!out.length)throw Error('Transcript is empty.');return out}
+async function core(post,d){try{const M=await import(d.lib||'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm');M.env.allowLocalModels=false;if(d.host)M.env.remoteHost=d.host;if(d.th)M.env.backends.onnx.wasm.numThreads=d.th;
+let lt=0;const asr=await M.pipeline('automatic-speech-recognition','Xenova/whisper-base',{progress_callback:p=>{const n=Date.now();if(p.status=='progress'&&n-lt<200&&p.loaded<p.total)return;lt=n;post({t:'load',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}})}});
+post({t:'loaded'});const r=await asr(d.audio,{chunk_length_s:30,stride_length_s:5,return_timestamps:true,chunk_callback:()=>post({t:'chunk'})});
+post({t:'done',r:{text:r.text,chunks:(r.chunks||[]).map(c=>({ts:c.timestamp,t:c.text}))}})}catch(e){post({t:'err',m:String(e&&e.message||e)})}}
+async function stage3(){S.whisper=false;for(const k of['.man','.skip'])stg[3].querySelector(k).hidden=true;
+try{if(!navigator.onLine)throw Error('You are offline and the model is not cached yet.');
+st(3,'running',{text:'Resampling to 16 kHz mono (for Whisper)…'});
+const oc=new OfflineAudioContext(1,Math.ceil(S.buf.duration*16000),16000),src=oc.createBufferSource();src.buffer=S.buf;src.connect(oc.destination);src.start();
+const au=(await oc.startRendering()).getChannelData(0).slice();
+const est=Math.max(1,Math.ceil(S.buf.duration/20));let chunks=0,last=Date.now(),phase='load',files={},w=null,wd=null,done=false;
+st(3,'running',{pct:0,text:'Mode: Local. Loading Whisper Base model (first run downloads model files). Smooth Shield is on: heavy visual effects pause while Whisper works and return afterwards.'});
+const r=await new Promise((resolve,reject)=>{
+const fin=()=>{done=true;clearInterval(wd);if(w)try{w.terminate()}catch(_){}if(S.wu){URL.revokeObjectURL(S.wu);S.wu=null}};
+const on=m=>{if(done)return;last=Date.now();
+if(m.t=='load'){const p=m.p;if(p.status=='progress'&&p.total){files[p.file]=[p.loaded,p.total];let l=0,t=0;for(const k in files){l+=files[k][0];t+=files[k][1]}st(3,'running',{pct:l/t*100,text:`Loading model: ${(l/1048576).toFixed(1)} / ${(t/1048576).toFixed(1)} MB downloaded`})}}
+else if(m.t=='loaded'){phase='asr';st(3,'running',{pct:0,text:`Transcribing locally with Whisper Base… 0 of about ${est} audio chunks done`})}
+else if(m.t=='chunk'){chunks++;st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Transcribing locally… ${chunks} of about ${est} audio chunks done (chunk count is an estimate; 100% only after the transcript is validated)`})}
+else if(m.t=='done'){fin();resolve(m.r)}else if(m.t=='err'){fin();reject(Error(m.m))}};
+wd=setInterval(()=>{const idle=(Date.now()-last)/1000,lim=(phase=='load'?240:420)*(S.limX||1);
+if(idle>lim){fin();reject(Error(`Whisper made no progress for ${Math.round(lim)} s (stalled).`))}
+else if(phase=='asr'&&idle>45)st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Still transcribing (CPU is slow on this device). Last update ${Math.round(idle)} s ago; ErrTor will stop it at ${lim} s without progress.`})},2000);
+const main=()=>{ET(3,'Background worker unavailable','running Whisper on the main thread (page may feel slow)');core(on,{audio:au.slice(),lib:S.cfg&&S.cfg.lib,host:S.cfg&&S.cfg.host,th:Math.max(1,Math.min(4,(navigator.hardwareConcurrency||4)-2))})};
+try{if(S.mainThread)throw 0;const code='const core='+core.toString()+';self.onmessage=e=>core(m=>self.postMessage(m),e.data);';
+S.wu=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));w=new Worker(S.wu,{type:'module'});
+w.onmessage=e=>on(e.data);let got=false;w.onmessage=e=>{got=true;on(e.data)};
+w.onerror=e=>{if(!got&&!done){try{w.terminate()}catch(_){}w=null;S.mainThread?main():(fin(),reject(Error('Worker could not start; main-thread Whisper is off to prevent lag.')))}else if(!done){fin();reject(Error('Worker crashed: '+(e.message||'unknown')))}};
+w.postMessage({audio:au.slice(),lib:S.cfg&&S.cfg.lib,host:S.cfg&&S.cfg.host,th:Math.max(1,Math.min(4,(navigator.hardwareConcurrency||4)-2))},[]);
+}catch(e){S.mainThread?main():(fin(),reject(Error('Worker unavailable; main-thread Whisper is off to prevent lag.')))}});
+const dur=S.buf.duration;let ch=(r.chunks||[]).map(c=>({s:+(c.ts&&c.ts[0])||0,e:(c.ts&&c.ts[1]!=null)?+c.ts[1]:dur,t:(c.t||'').trim()})).filter(c=>c.t);
+if(!ch.length&&r.text&&r.text.trim())ch=[{s:0,e:dur,t:r.text.trim()}];
+if(!ch.length)throw Error('Whisper finished but returned no speech text (the audio may contain no recognisable speech).');
+let lastE=0,fixed=0;ch.forEach(c=>{if(c.s<lastE){c.s=lastE;fixed++}if(!(c.e>c.s)){c.e=Math.min(dur,c.s+Math.max(.5,c.t.length*.06));fixed++}lastE=c.s});
+if(fixed)ET(3,fixed+' transcript timestamp(s) were out of order or empty','auto-corrected to valid ascending times; edit them if needed');
+S.segs=ch;S.whisper=true;showTx(ch,false);
+stg[3].querySelector('.info').textContent='Segment-level timestamps (word-level not used). Detected language/confidence: not reported by the model output. Edit text/timestamps below.';
+st(3,'completed',{pct:100,text:'We transcribed it successfully using Whisper Base'});return true
+}catch(e){st(3,'failed',{text:'Whisper Base could not finish: '+(e.message||e)+' Options: Retry, enter the transcript manually (labelled NOT Whisper), or skip to 4. Separate. Local Whisper needs internet to Hugging Face/jsDelivr on first run and WebAssembly support.'});
+stg[3].querySelector('.man').hidden=false;stg[3].querySelector('.skip').hidden=false;return false}}
+stg[3].querySelector('.skip').onclick=()=>{S.skipped=true;st(3,'unavailable',{pct:0,text:'Skipped after an error. No transcript exists, so MIDI/KAR download stays disabled until you supply one (Retry or manual).'});run(4)};
+stg[3].querySelector('.man').onclick=()=>{S.manual=true;const t=tx();t.hidden=false;t.value='0.00 | 3.00 | First lyric line\n3.00 | 6.00 | Second lyric line';stg[3].querySelector('.info').hidden=false;stg[3].querySelector('.use').hidden=false;t.focus()};
+stg[3].querySelector('.use').onclick=()=>{try{S.segs=parseTx()}catch(e){st(3,'failed',{text:e.message});stg[3].querySelector('.use').hidden=false;return}
+S.whisper=false;st(3,'completed',{pct:100,text:'Manual transcript in use. It was NOT produced by Whisper Base.'});run(4)};
+// ---- stage 4
+function wavBlob(d,sr){const n=d.length,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,d[i]))*32767,true);return new Blob([b],{type:'audio/wav'})}
+async function stage4(){if(S.buf.numberOfChannels<2){st(4,'unavailable',{pct:0,text:'Unavailable: this file is mono, and the mid/side engine needs two channels. No stems were generated.'});return true}
+st(4,'running',{pct:0,text:'Computing centre/side stems…'});const L=S.buf.getChannelData(0),R=S.buf.getChannelData(1),n=L.length,mid=new Float32Array(n),sd=new Float32Array(n),K=1<<18;
+for(let i=0;i<n;i+=K){for(let j=i;j<Math.min(n,i+K);j++){mid[j]=(L[j]+R[j])/2;sd[j]=(L[j]-R[j])/2}st(4,'running',{pct:Math.min(i+K,n)/n*70,text:'Computing centre/side stems…'});await tick()}
+const out=stg[4].querySelector('.stems');out.textContent='';let k=0;
+for(const[name,d]of[['Centre (vocal-leaning, mono)',mid],['Sides (stereo ambience, mono)',sd]]){
+let pk=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}
+if(pk<1e-5){out.textContent='';st(4,'unavailable',{pct:0,text:`Unavailable: the "${name}" stem is silent because both channels are identical (dual-mono), so mid/side has nothing to separate. No stems were kept.`});return true}
+const blob=wavBlob(d,S.buf.sampleRate);const oc=new OfflineAudioContext(1,1,44100);const dec=await oc.decodeAudioData(await blob.arrayBuffer());
+if(!dec.length||dec.duration<=0)throw Error(`The "${name}" stem failed validation.`);
+const u=URL.createObjectURL(blob),dv=document.createElement('div'),lb=document.createElement('div'),au=document.createElement('audio'),a=document.createElement('a');
+lb.textContent=`${name} · ${dec.duration.toFixed(2)} s · ${(blob.size/1048576).toFixed(1)} MB`;au.controls=true;au.src=u;a.className='btn';a.href=u;a.download=safeBase()+(k?'_sides':'_centre')+'.wav';a.textContent='Download stem (.wav)';dv.append(lb,au,a);out.append(dv);
+st(4,'running',{pct:70+(++k)*15,text:'Validating stems…'})}
+st(4,'completed',{pct:100,text:'We finished separating the transcribed audio'});return true}
+// ---- stage 5 / MIDI
+const safeBase=()=>((S.file?S.file.name:'audio').replace(/\.[^.]+$/,'').replace(/[^\w\-. ]+/g,'_').trim().slice(0,80))||'audio';
+const vlq=n=>{const b=[n&127];while(n>>=7)b.unshift((n&127)|128);return b};
+const be=(n,k)=>Array.from({length:k},(_,i)=>(n>>>(8*(k-1-i)))&255);
+function meta(dt,type,data){return[...vlq(dt),255,type,...vlq(data.length),...data]}
+function trk(ev){const d=ev.flat();return[77,84,114,107,...be(d.length,4),...d]}
+function buildMidi(segs,dur,kar,title){const enc=new TextEncoder(),PPQ=480,TPS=960;
+const t0=[meta(0,3,[...enc.encode('Tempo')]),meta(0,81,[7,161,32]),meta(0,88,[4,2,24,8]),meta(0,47,[])];
+const ev=[meta(0,3,[...enc.encode('Words')])];if(kar){ev.push(meta(0,1,[...enc.encode('@KMIDI KARAOKE FILE')]),meta(0,1,[...enc.encode('@T'+title)]))}
+let last=0,cnt=0;segs.forEach((s,si)=>{const w=s.t.split(/\s+/).filter(Boolean);w.forEach((x,i)=>{let tk=Math.round((s.s+(s.e-s.s)*i/w.length)*TPS);if(tk<last)tk=last;
+const txt=(i==0&&si>0&&kar?'/':'')+x+(i<w.length-1?' ':' ');ev.push(meta(tk-last,5,[...enc.encode(txt)]));last=tk;cnt++})});
+ev.push(meta(Math.max(0,Math.round(dur*TPS)-last),47,[]));
+return{bytes:new Uint8Array([77,84,104,100,...be(6,4),0,1,0,2,...be(PPQ,2),...trk(t0),...trk(ev)]),words:cnt}}
+function verify(u,kar,words){try{const dv=new DataView(u.buffer);if(String.fromCharCode(...u.slice(0,4))!='MThd'||dv.getUint32(4)!=6)return'bad header';const nt=dv.getUint16(10);let o=14,ly=0,notes=0;
+for(let t=0;t<nt;t++){if(String.fromCharCode(...u.slice(o,o+4))!='MTrk')return'bad track chunk';const len=dv.getUint32(o+4);let p=o+8;const end=p+len;if(end>u.length)return'track overruns file';let lastMeta=null;
+while(p<end){while(u[p++]&128);const s=u[p++];if(s==255){const ty=u[p++];let l=0,b;do{b=u[p++];l=l<<7|b&127}while(b&128);if(ty==5)ly++;lastMeta=[ty,l];p+=l}else if((s&240)==144)return'note event found';else return'unexpected event 0x'+s.toString(16)}
+if(p!=end||!lastMeta||lastMeta[0]!=47||lastMeta[1]!=0)return'missing end-of-track';o=end}
+if(o!=u.length)return'trailing bytes';if(ly!=words)return'lyric event count mismatch';if(kar&&!ly)return'no lyric events';return{tracks:nt,lyrics:ly,notes:notes}}catch(e){return'parse error'}}
+$('#ext').onchange=()=>{$('#dl').textContent='Download .'+$('#ext').value};
+$('#dl').onclick=async()=>{const ext=$('#ext').value,kar=ext=='kar',di=stg[5].querySelector('.dinfo');
+try{const segs=parseTx();st(5,'running',{text:'Preparing file…'});await tick();
+const{bytes,words}=buildMidi(segs,S.buf.duration,kar,safeBase());const v=verify(bytes,kar,words);
+if(typeof v=='string'||!bytes.length)throw Error('Generated file failed validation: '+v);
+const name=safeBase()+'.'+ext,blob=new Blob([bytes],{type:'audio/midi'}),a=document.createElement('a');
+a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);
+st(5,'running',{text:'Downloading .'+ext});a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);
+di.textContent=`${name} · ${bytes.length} bytes · MIME audio/midi · Standard MIDI File, ${v.tracks} tracks · ${v.lyrics} Lyric meta events (0x05) · ${v.notes} note events (no pitch-detection stage exists in this app, so none are written; Whisper words are never turned into notes). Lyric word timing spreads each segment's words evenly between its start and end.`;
+st(5,'completed',{pct:100,text:`File generated and validated; download requested: ${name}`})}
+catch(e){st(5,'failed',{text:e.message});stg[5].querySelector('.retry').hidden=true}}
+async function stage5(){st(5,'pending',{pct:0,text:S.segs?'Ready. Choose an extension and download.':'Download disabled: no transcript available (finish or manually enter a transcript in 3).'});$('#dl').disabled=!S.segs;return true}
+// ---- pipeline
+const fns=[0,stage1,stage2,stage3,stage4,stage5];
+async function run(from){if(busy)return;busy=true;$('#dec').disabled=true;
+if(from>1&&!S.ab){busy=false;return}
+try{if(from==1)resetFrom(1);else resetFrom(from);
+for(let n=from;n<=5;n++){let ok;if(n==3)shield(1);try{ok=await fns[n]()}catch(e){st(n,'failed',{text:'Failed: '+(e.message||e)+' Earlier results are preserved.'});ok=false}if(n==3)shield(0);if(!ok&&n!=4)break}}
+finally{shield(0);busy=false;$('#dec').disabled=!S.file}}
+const probe=async u=>{try{const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);await fetch(u,{mode:'no-cors',cache:'no-store',signal:c.signal});clearTimeout(t);return true}catch(e){return false}};
+$('#efix').onclick=async()=>{const res=$('#eres');res.textContent='';const add=(m,ok)=>{const li=document.createElement('li');li.textContent=(ok?'✔ ':'• ')+m;res.append(li)};
+const txt=$('#epaste').value.trim();if(!txt){add('Paste the copied ErrTor report first.');return}
+if(busy){add('A stage is still running. Wait for it to stop, then run the fix.');return}
+const ents=[...txt.matchAll(/\[(\d\d:\d\d:\d\d)\]\s*(?:Stage\s*(\d)|App):\s*(.+)/gi)].map(m=>({n:+m[2]||0,m:m[3]}));
+if(!ents.length){add('No ErrTor lines found. Paste the report exactly as copied (each line starts with [time] Stage N:).');return}
+add(ents.length+' error line(s) detected. All fixes run in one pass.',1);let rerun=99,net=false;
+for(const e of ents){const m=e.m;
+if(/failed to fetch|networkerror|load failed|dynamically imported module/i.test(m)){net=true;rerun=Math.min(rerun,3)}
+else if(/lag detected/i.test(m)){add('Lag: Smooth Shield and slower screen updates stay on during transcription. Close other tabs/apps to free the CPU.',1)}
+else if(/no progress|stalled/i.test(m)){S.limX=(S.limX||1)*2;add('Stage 3 stall: watchdog limits doubled (now x'+S.limX+').',1);rerun=Math.min(rerun,3)}
+else if(/worker/i.test(m)){S.mainThread=true;add('Worker problem: main-thread Whisper is allowed for this run (it can lag; Smooth Shield stays on).',1);rerun=Math.min(rerun,3)}
+else if(/offline/i.test(m)){if(navigator.onLine){add('Connection is back: retrying transcription.',1);rerun=Math.min(rerun,3)}else add('You are offline. Reconnect to the internet (model files download once), then run the fix again.')}
+else if(e.n&&e.n<=2){add('Stage '+e.n+': re-reading and re-decoding the original file (it is unchanged).',1);rerun=Math.min(rerun,e.n)}
+else if(/transcript/i.test(m)){add('Transcript text problem: correct the lines in the transcript box (format: start | end | text), then press Download.')}
+else if(/stem|dual-mono|mono/i.test(m)){add('Stage 4: this file has no separable stereo content, so there is nothing to fix. Download still works.',1)}
+else if(e.n==5){add('Stage 5: the file is rebuilt and re-validated each time you press Download.',1)}
+else add('Not recognised, so no automatic fix: '+m.slice(0,140))}
+if(net){add('Testing network routes (up to 6 s each)…');
+const[jd,esm,hf,mir]=await Promise.all([probe('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/package.json'),probe('https://esm.sh/@huggingface/transformers@3.0.2'),probe('https://huggingface.co/Xenova/whisper-base/resolve/main/config.json'),probe('https://hf-mirror.com/Xenova/whisper-base/resolve/main/config.json')]);
+const y=v=>v?'reachable':'blocked';add(`jsDelivr ${y(jd)}, esm.sh ${y(esm)}, Hugging Face ${y(hf)}, hf-mirror ${y(mir)}.`);
+const lib=jd?undefined:esm?'https://esm.sh/@huggingface/transformers@3.0.2':null,host=hf?undefined:mir?'https://hf-mirror.com':null;
+if(lib===null||host===null){rerun=99;add('Cannot be fixed from this page: '+(lib===null?'the Whisper code host':'the Whisper model host')+' is unreachable. Hosted pages block these hosts and offline devices cannot download them. Open the saved HTML file from your device in Chrome/Edge with internet access, or use "Skip transcription" / the manual transcript.')}
+else{S.cfg={lib,host};add('A working route was found and will be used.',1)}}
+if(rerun<99){if(!S.file){add('Choose an audio file first, then run the fix again.');return}
+if(rerun>=3&&!S.buf)rerun=2;if(rerun>=2&&!S.ab)rerun=1;add('Re-running from stage '+rerun+'. Finished earlier stages are kept.',1);run(rerun)}
+else if(!net)add('No stage needs a re-run.')};
+$('#hg').onchange=e=>document.body.classList.toggle('lo',!e.target.checked);
+{let fc=0,ft=performance.now(),lowc=0;(function lp(t){fc++;if(t-ft>=1000){const fps=Math.round(fc*1000/(t-ft));$('#fps').textContent='FPS: '+fps;if(S.shield&&fps<30){if(++lowc>=3&&!S.slow){S.slow=true;ET(3,'UI lag detected ('+fps+' FPS) during transcription','updates throttled to 2 per second')}}else lowc=0;fc=0;ft=t}requestAnimationFrame(lp)})(ft)}
+$('#dec').onclick=()=>{S.ab=null;run(1)};
+</script></body></html>

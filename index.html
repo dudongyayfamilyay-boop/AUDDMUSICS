@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AuddMusic - AHHAW 500.0</title>
+<title>AuddMusic - AHHAW 630.50</title>
 <style>
 :root{color-scheme:dark;--g:rgba(255,255,255,.08);--b:rgba(255,255,255,.2);--t:#f2f4ff;--m:#b9c0e6;--ok:#5ef2b0;--er:#ff7a8a;--ac:#8fa6ff}
 *{box-sizing:border-box}
@@ -46,13 +46,13 @@ a.btn{display:inline-block;text-decoration:none}
 @media (prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
 @media (max-width:520px){.sh{flex-wrap:wrap}.bar{order:3;flex-basis:100%}}
 </style></head><body><main>
-<header class="glass"><h1>AuddMusic - AHHAW</h1><span class="ver">500.0</span><label class="mut"><input type="checkbox" id="hg" checked> High graphics</label><span class="mut" id="fps" title="Rendering uses GPU-friendly transforms and targets your screen's full refresh rate (up to 120 FPS if the display supports it). The meter shows the real measured rate.">FPS: …</span></header>
+<header class="glass"><h1>AuddMusic - AHHAW</h1><span class="ver">630.50</span><label class="mut"><input type="checkbox" id="hg" checked> High graphics</label><span class="mut" id="fps" title="Rendering uses GPU-friendly transforms and targets your screen's full refresh rate (up to 120 FPS if the display supports it). The meter shows the real measured rate.">FPS: …</span></header>
 
 <section class="glass" aria-labelledby="uh">
 <h2 id="uh">Audio file (.wav or .mp3 only)</h2>
 <label id="up" tabindex="0">Tap to choose a WAV or MP3, or drop it here
 <input id="file" type="file" accept=".wav,.mp3,audio/wav,audio/x-wav,audio/mpeg,audio/mp3" aria-label="Choose WAV or MP3 file"></label>
-<p id="uerr" class="err" role="alert"></p>
+<p id="pre" class="mut" role="status"></p><p id="uerr" class="err" role="alert"></p>
 <p id="finfo" class="mut"></p>
 <div class="row"><button id="rep" disabled>Replace File</button><button id="rem" disabled>Remove File</button><button id="dec" disabled style="font-weight:700">Decode</button></div>
 <p class="mut">Privacy: everything runs on your device and no audio is uploaded. The only network use is downloading the Whisper Base model files from Hugging Face (and its code from jsDelivr) on first transcription; the model is cached by your browser. No OpenAI API, accounts, keys or paid services are used.</p>
@@ -111,10 +111,10 @@ const wav=s(0,4)=='RIFF'&&s(8,4)=='WAVE',mp3=s(0,3)=='ID3'||(b[0]==255&&(b[1]&22
 if(/\.wav$/i.test(f.name)&&!wav)throw Error('This file is named .wav but its content is not a valid WAV (RIFF/WAVE header missing). It may be corrupt or a different format.');
 if(/\.mp3$/i.test(f.name)&&!mp3)throw Error('This file is named .mp3 but its content is not MPEG audio (no ID3 tag or frame sync). It may be corrupt or a different format.')}
 async function setFile(f){showErr('');try{await checkFile(f)}catch(e){showErr(e.message);return}
-S.file=f;S.buf=null;resetFrom(1);$('#finfo').textContent=`${f.name} · ${(f.size/1048576).toFixed(2)} MB`;$('#dec').disabled=false;$('#rep').disabled=$('#rem').disabled=false}
+S.file=f;S.buf=null;resetFrom(1);$('#finfo').textContent=`${f.name} · ${(f.size/1048576).toFixed(2)} MB`;preload();$('#dec').disabled=false;$('#rep').disabled=$('#rem').disabled=false}
 $('#file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)setFile(f)};
 $('#rep').onclick=()=>$('#file').click();
-$('#rem').onclick=()=>{S.file=null;S.buf=null;resetFrom(1);$('#finfo').textContent='';showErr('');$('#dec').disabled=$('#rep').disabled=$('#rem').disabled=true};
+$('#rem').onclick=()=>{killW();$('#pre').textContent='';S.file=null;S.buf=null;resetFrom(1);$('#finfo').textContent='';showErr('');$('#dec').disabled=$('#rep').disabled=$('#rem').disabled=true};
 $('#up').onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();$('#file').click()}};
 const up=$('#up');up.ondragover=e=>{e.preventDefault();up.classList.add('over')};up.ondragleave=()=>up.classList.remove('over');
 up.ondrop=e=>{e.preventDefault();up.classList.remove('over');const f=e.dataTransfer.files[0];if(f)setFile(f)};
@@ -171,43 +171,62 @@ L.forEach((ln,i)=>{if(!ln.trim())return;const p=ln.split('|');if(p.length<3)thro
 const s=parseFloat(p[0]),e=parseFloat(p[1]),t=p.slice(2).join('|').trim();
 if(!(s>=0)||!(e>s)||s<last-1e-6||!t)throw Error(`Transcript line ${i+1}: needs numeric start ≥ 0, end > start, in order, with text.`);last=s;out.push({s,e,t})});
 if(!out.length)throw Error('Transcript is empty.');return out}
-async function core(post,d){try{const M=await import(d.lib||'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm');M.env.allowLocalModels=false;if(d.host)M.env.remoteHost=d.host;if(d.th)M.env.backends.onnx.wasm.numThreads=d.th;
-let lt=0;const asr=await M.pipeline('automatic-speech-recognition','Xenova/whisper-base',{progress_callback:p=>{const n=Date.now();if(p.status=='progress'&&n-lt<200&&p.loaded<p.total)return;lt=n;post({t:'load',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}})}});
-post({t:'loaded'});const r=await asr(d.audio,{chunk_length_s:30,stride_length_s:5,return_timestamps:true,chunk_callback:()=>post({t:'chunk'})});
-post({t:'done',r:{text:r.text,chunks:(r.chunks||[]).map(c=>({ts:c.timestamp,t:c.text}))}})}catch(e){post({t:'err',m:String(e&&e.message||e)})}}
-async function stage3(){S.whisper=false;for(const k of['.man','.skip'])stg[3].querySelector(k).hidden=true;
-try{if(!navigator.onLine)throw Error('You are offline and the model is not cached yet.');
+function wf(post){let asr=null;const DEF='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm';
+return async d=>{try{
+if(d.t=='init'){const M=await import(d.lib||DEF);M.env.allowLocalModels=false;if(d.host)M.env.remoteHost=d.host;try{M.env.backends.onnx.wasm.numThreads=d.th||1}catch(_){}
+let lt=0;asr=await M.pipeline('automatic-speech-recognition','Xenova/whisper-base',Object.assign({device:'wasm',progress_callback:p=>{const n=Date.now();if(p.status=='progress'&&n-lt<200&&p.loaded<p.total)return;lt=n;post({t:'load',p:{status:p.status,file:p.file,loaded:p.loaded,total:p.total}})}},d.fp32?{}:{dtype:{encoder_model:'q8',decoder_model_merged:'q8'}}));post({t:'loaded'})}
+else if(d.t=='run'){if(!asr)throw Error('Whisper model is not loaded');const r=await asr(d.audio,{chunk_length_s:30,stride_length_s:5,return_timestamps:true,chunk_callback:()=>post({t:'chunk'})});
+post({t:'done',r:{text:r.text,chunks:(r.chunks||[]).map(c=>({ts:c.timestamp,t:c.text}))}})}
+}catch(e){post({t:'err',m:String(e&&e.message||e)})}}}
+function lsSet(v){try{v?localStorage.setItem('aud_loading',Date.now()):localStorage.removeItem('aud_loading')}catch(_){}}
+function killW(){const W=S.W;S.W=null;if(W)try{W.kill()}catch(_){}if(S.wu){URL.revokeObjectURL(S.wu);S.wu=null}lsSet(0)}
+function mkW(){const cfg={t:'init',lib:S.cfg&&S.cfg.lib,host:S.cfg&&S.cfg.host,th:(!S.safe&&self.crossOriginIsolated)?Math.max(1,Math.min(2,(navigator.hardwareConcurrency||4)-2)):1,fp32:!!S.fp32};
+const W={state:'loading',ls:new Set(),files:{},last:Date.now()};
+W.mb=()=>{let l=0,t=0;for(const k in W.files){l+=W.files[k][0];t+=W.files[k][1]}return t?(l/1048576).toFixed(1)+' / '+(t/1048576).toFixed(1)+' MB':''};
+W.pct=()=>{let l=0,t=0;for(const k in W.files){l+=W.files[k][0];t+=W.files[k][1]}return t?l/t*100:null};
+const emit=m=>{W.last=Date.now();if(m.t=='load'&&m.p.status=='progress'&&m.p.total)W.files[m.p.file]=[m.p.loaded,m.p.total];
+if(m.t=='loaded'){W.state='ready';lsSet(0)}if(m.t=='err'&&W.state=='loading'){W.state='error';W.err=m.m;lsSet(0)}
+$('#pre').textContent=(S.safe?'Safe mode ON. ':'')+(W.state=='ready'?'Whisper model: ready.':W.state=='error'?'Whisper model preload failed; it will retry at Transcribe.':'Whisper model preloading… '+W.mb());
+W.ls.forEach(f=>f(m))};
+lsSet(1);
+try{if(S.mainThread)throw 0;S.wu=URL.createObjectURL(new Blob(['const wf='+wf.toString()+';const h=wf(m=>self.postMessage(m));self.onmessage=e=>h(e.data);'],{type:'text/javascript'}));
+const w=new Worker(S.wu,{type:'module'});let got=false;w.onmessage=e=>{got=true;emit(e.data)};
+w.onerror=e=>emit({t:'err',m:(got?'Worker crashed: ':'Worker could not start: ')+(e.message||'unknown')+'. Main-thread Whisper is off to prevent lag.'});
+W.send=(m,t)=>w.postMessage(m,t||[]);W.kill=()=>w.terminate()}
+catch(e){if(S.mainThread){const h=wf(emit);W.send=m=>setTimeout(()=>h(m),0);W.kill=()=>{}}else{W.send=()=>{};W.kill=()=>{};setTimeout(()=>emit({t:'err',m:'Worker unavailable; main-thread Whisper is off to prevent lag.'}),0)}}
+W.send(cfg);return W}
+function preload(){if(S.safe||S.W||S.mainThread||!navigator.onLine)return;S.W=mkW()}
+async function stage3(){S.whisper=false;for(const k of['.man','.skip'])stg[3].querySelector(k).hidden=true;let W=null;
+try{if(!navigator.onLine&&!(S.W&&S.W.state=='ready'))throw Error('You are offline and the model is not cached yet.');
 st(3,'running',{text:'Resampling to 16 kHz mono (for Whisper)…'});
 const oc=new OfflineAudioContext(1,Math.ceil(S.buf.duration*16000),16000),src=oc.createBufferSource();src.buffer=S.buf;src.connect(oc.destination);src.start();
 const au=(await oc.startRendering()).getChannelData(0).slice();
-const est=Math.max(1,Math.ceil(S.buf.duration/20));let chunks=0,last=Date.now(),phase='load',files={},w=null,wd=null,done=false;
-st(3,'running',{pct:0,text:'Mode: Local. Loading Whisper Base model (first run downloads model files). Smooth Shield is on: heavy visual effects pause while Whisper works and return afterwards.'});
+if(S.W&&S.W.state=='error')killW();if(!S.W)S.W=mkW();W=S.W;
+const est=Math.max(1,Math.ceil(S.buf.duration/20));let chunks=0,last=Date.now(),started=false,done=false,wd;
 const r=await new Promise((resolve,reject)=>{
-const fin=()=>{done=true;clearInterval(wd);if(w)try{w.terminate()}catch(_){}if(S.wu){URL.revokeObjectURL(S.wu);S.wu=null}};
+const fin=()=>{done=true;clearInterval(wd);W.ls.delete(on)};
+const go=()=>{if(started)return;started=true;st(3,'running',{pct:0,text:`Transcribing locally with Whisper Base… 0 of about ${est} audio chunks done`});W.send({t:'run',audio:au},[au.buffer])};
 const on=m=>{if(done)return;last=Date.now();
-if(m.t=='load'){const p=m.p;if(p.status=='progress'&&p.total){files[p.file]=[p.loaded,p.total];let l=0,t=0;for(const k in files){l+=files[k][0];t+=files[k][1]}st(3,'running',{pct:l/t*100,text:`Loading model: ${(l/1048576).toFixed(1)} / ${(t/1048576).toFixed(1)} MB downloaded`})}}
-else if(m.t=='loaded'){phase='asr';st(3,'running',{pct:0,text:`Transcribing locally with Whisper Base… 0 of about ${est} audio chunks done`})}
-else if(m.t=='chunk'){chunks++;st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Transcribing locally… ${chunks} of about ${est} audio chunks done (chunk count is an estimate; 100% only after the transcript is validated)`})}
+if(m.t=='load'){const p=W.pct();if(p!=null)st(3,'running',{pct:p,text:`Loading Whisper Base (compressed q8 model): ${W.mb()}`})}
+else if(m.t=='loaded')go();
+else if(m.t=='chunk'){chunks++;st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Transcribing locally… ${chunks} of about ${est} audio chunks done (estimate; 100% only after the transcript is validated)`})}
 else if(m.t=='done'){fin();resolve(m.r)}else if(m.t=='err'){fin();reject(Error(m.m))}};
-wd=setInterval(()=>{const idle=(Date.now()-last)/1000,lim=(phase=='load'?240:420)*(S.limX||1);
+W.ls.add(on);
+if(W.state=='ready'){st(3,'running',{text:'Model already loaded (preloaded).'});go()}
+else if(W.state=='error'){fin();reject(Error(W.err))}
+else st(3,'running',{pct:W.pct(),text:'Mode: Local. Loading the compressed Whisper Base model (it was preloading since you chose the file). Smooth Shield is on: heavy visual effects pause while Whisper works.'});
+wd=setInterval(()=>{const idle=(Date.now()-Math.max(last,W.last))/1000,lim=(started?420:240)*(S.limX||1);
 if(idle>lim){fin();reject(Error(`Whisper made no progress for ${Math.round(lim)} s (stalled).`))}
-else if(phase=='asr'&&idle>45)st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Still transcribing (CPU is slow on this device). Last update ${Math.round(idle)} s ago; ErrTor will stop it at ${lim} s without progress.`})},2000);
-const main=()=>{ET(3,'Background worker unavailable','running Whisper on the main thread (page may feel slow)');core(on,{audio:au.slice(),lib:S.cfg&&S.cfg.lib,host:S.cfg&&S.cfg.host,th:Math.max(1,Math.min(4,(navigator.hardwareConcurrency||4)-2))})};
-try{if(S.mainThread)throw 0;const code='const core='+core.toString()+';self.onmessage=e=>core(m=>self.postMessage(m),e.data);';
-S.wu=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));w=new Worker(S.wu,{type:'module'});
-w.onmessage=e=>on(e.data);let got=false;w.onmessage=e=>{got=true;on(e.data)};
-w.onerror=e=>{if(!got&&!done){try{w.terminate()}catch(_){}w=null;S.mainThread?main():(fin(),reject(Error('Worker could not start; main-thread Whisper is off to prevent lag.')))}else if(!done){fin();reject(Error('Worker crashed: '+(e.message||'unknown')))}};
-w.postMessage({audio:au.slice(),lib:S.cfg&&S.cfg.lib,host:S.cfg&&S.cfg.host,th:Math.max(1,Math.min(4,(navigator.hardwareConcurrency||4)-2))},[]);
-}catch(e){S.mainThread?main():(fin(),reject(Error('Worker unavailable; main-thread Whisper is off to prevent lag.')))}});
+else if(started&&idle>45)st(3,'running',{pct:Math.min(99,chunks/est*100),text:`Still transcribing (slow CPU). Last update ${Math.round(idle)} s ago; ErrTor stops it at ${lim} s without progress.`})},2000)});
 const dur=S.buf.duration;let ch=(r.chunks||[]).map(c=>({s:+(c.ts&&c.ts[0])||0,e:(c.ts&&c.ts[1]!=null)?+c.ts[1]:dur,t:(c.t||'').trim()})).filter(c=>c.t);
 if(!ch.length&&r.text&&r.text.trim())ch=[{s:0,e:dur,t:r.text.trim()}];
 if(!ch.length)throw Error('Whisper finished but returned no speech text (the audio may contain no recognisable speech).');
 let lastE=0,fixed=0;ch.forEach(c=>{if(c.s<lastE){c.s=lastE;fixed++}if(!(c.e>c.s)){c.e=Math.min(dur,c.s+Math.max(.5,c.t.length*.06));fixed++}lastE=c.s});
 if(fixed)ET(3,fixed+' transcript timestamp(s) were out of order or empty','auto-corrected to valid ascending times; edit them if needed');
-S.segs=ch;S.whisper=true;showTx(ch,false);
+S.segs=ch;S.whisper=true;showTx(ch,false);killW();
 stg[3].querySelector('.info').textContent='Segment-level timestamps (word-level not used). Detected language/confidence: not reported by the model output. Edit text/timestamps below.';
 st(3,'completed',{pct:100,text:'We transcribed it successfully using Whisper Base'});return true
-}catch(e){st(3,'failed',{text:'Whisper Base could not finish: '+(e.message||e)+' Options: Retry, enter the transcript manually (labelled NOT Whisper), or skip to 4. Separate. Local Whisper needs internet to Hugging Face/jsDelivr on first run and WebAssembly support.'});
+}catch(e){killW();st(3,'failed',{text:'Whisper Base could not finish: '+(e.message||e)+' Options: Retry, enter the transcript manually (labelled NOT Whisper), or skip to 4. Separate. Local Whisper needs internet to Hugging Face/jsDelivr on first run and WebAssembly support.'});
 stg[3].querySelector('.man').hidden=false;stg[3].querySelector('.skip').hidden=false;return false}}
 stg[3].querySelector('.skip').onclick=()=>{S.skipped=true;st(3,'unavailable',{pct:0,text:'Skipped after an error. No transcript exists, so MIDI/KAR download stays disabled until you supply one (Retry or manual).'});run(4)};
 stg[3].querySelector('.man').onclick=()=>{S.manual=true;const t=tx();t.hidden=false;t.value='0.00 | 3.00 | First lyric line\n3.00 | 6.00 | Second lyric line';stg[3].querySelector('.info').hidden=false;stg[3].querySelector('.use').hidden=false;t.focus()};
@@ -275,7 +294,9 @@ const ents=[...txt.matchAll(/\[(\d\d:\d\d:\d\d)\]\s*(?:Stage\s*(\d)|App):\s*(.+)
 if(!ents.length){add('No ErrTor lines found. Paste the report exactly as copied (each line starts with [time] Stage N:).');return}
 add(ents.length+' error line(s) detected. All fixes run in one pass.',1);let rerun=99,net=false;
 for(const e of ents){const m=e.m;
-if(/failed to fetch|networkerror|load failed|dynamically imported module/i.test(m)){net=true;rerun=Math.min(rerun,3)}
+if(/aw,?\s*snap|crash|out of memory/i.test(m)){S.safe=true;try{localStorage.setItem('aud_safe','1')}catch(_){}S.fp32=false;killW();add('Crash/out-of-memory: Safe mode ON (single thread, compressed q8 model, no preload, worker restarted).',1);rerun=Math.min(rerun,3)}
+else if(/failed to fetch|networkerror|load failed|dynamically imported module/i.test(m)){net=true;rerun=Math.min(rerun,3)}
+else if(/quantized|could not locate|404/i.test(m)){S.fp32=true;killW();add('Compressed model file missing: switching to the full-size model (slower, larger).',1);rerun=Math.min(rerun,3)}
 else if(/lag detected/i.test(m)){add('Lag: Smooth Shield and slower screen updates stay on during transcription. Close other tabs/apps to free the CPU.',1)}
 else if(/no progress|stalled/i.test(m)){S.limX=(S.limX||1)*2;add('Stage 3 stall: watchdog limits doubled (now x'+S.limX+').',1);rerun=Math.min(rerun,3)}
 else if(/worker/i.test(m)){S.mainThread=true;add('Worker problem: main-thread Whisper is allowed for this run (it can lag; Smooth Shield stays on).',1);rerun=Math.min(rerun,3)}
@@ -290,11 +311,13 @@ const[jd,esm,hf,mir]=await Promise.all([probe('https://cdn.jsdelivr.net/npm/@hug
 const y=v=>v?'reachable':'blocked';add(`jsDelivr ${y(jd)}, esm.sh ${y(esm)}, Hugging Face ${y(hf)}, hf-mirror ${y(mir)}.`);
 const lib=jd?undefined:esm?'https://esm.sh/@huggingface/transformers@3.0.2':null,host=hf?undefined:mir?'https://hf-mirror.com':null;
 if(lib===null||host===null){rerun=99;add('Cannot be fixed from this page: '+(lib===null?'the Whisper code host':'the Whisper model host')+' is unreachable. Hosted pages block these hosts and offline devices cannot download them. Open the saved HTML file from your device in Chrome/Edge with internet access, or use "Skip transcription" / the manual transcript.')}
-else{S.cfg={lib,host};add('A working route was found and will be used.',1)}}
+else{killW();S.cfg={lib,host};add('A working route was found and will be used.',1)}}
 if(rerun<99){if(!S.file){add('Choose an audio file first, then run the fix again.');return}
 if(rerun>=3&&!S.buf)rerun=2;if(rerun>=2&&!S.ab)rerun=1;add('Re-running from stage '+rerun+'. Finished earlier stages are kept.',1);run(rerun)}
 else if(!net)add('No stage needs a re-run.')};
 $('#hg').onchange=e=>document.body.classList.toggle('lo',!e.target.checked);
 {let fc=0,ft=performance.now(),lowc=0;(function lp(t){fc++;if(t-ft>=1000){const fps=Math.round(fc*1000/(t-ft));$('#fps').textContent='FPS: '+fps;if(S.shield&&fps<30){if(++lowc>=3&&!S.slow){S.slow=true;ET(3,'UI lag detected ('+fps+' FPS) during transcription','updates throttled to 2 per second')}}else lowc=0;fc=0;ft=t}requestAnimationFrame(lp)})(ft)}
+try{if(localStorage.getItem('aud_loading')){localStorage.removeItem('aud_loading');S.safe=true;localStorage.setItem('aud_safe','1');ET(3,'Previous session ended while loading Whisper (possible "Aw, Snap!" crash)','Safe mode ON: single thread, compressed model, no preload')}else if(localStorage.getItem('aud_safe')=='1')S.safe=true}catch(_){}
+if(S.safe)$('#pre').textContent='Safe mode ON (single thread, no preload).';
 $('#dec').onclick=()=>{S.ab=null;run(1)};
 </script></body></html>
